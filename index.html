@@ -6,107 +6,18 @@
     <title>لوحة تحكم المسجد</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* زر الهامبرغر – لا يظهر إلا على الجوال */
-        .hamburger {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 1rem; /* يظهر في الركن الأيسر */
-            z-index: 1100;
-            background: rgba(5, 150, 105, 0.9);
-            backdrop-filter: blur(8px);<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لوحة تحكم المسجد</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
+        /* ضبط إطار iframe ليملأ المحتوى */
         #contentFrame {
             width: 100%;
-            height: 100vh;
-            border: none;
-            min-height: 100vh;
-            overflow-y: auto;
-        }
-
-        /* شريط التنقل الجانبي */
-        .sidebar {
-            position: fixed;
-            right: 0;
-            top: 0;
             height: 100%;
-            z-index: 99;
-        }
-
-        /* المحتوى الرئيسي */
-        .content {
-            margin-right: 300px;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        /* زر الهامبرغر (يظهر في الجوال) */
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 100;
-            background: linear-gradient(135deg, #065f46, #047857);
-            color: white;
             border: none;
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 1.6rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        /* تجاوب الجوال */
-        @media (max-width: 768px) {
-            .content {
-                margin-right: 0 !important;
-                padding: 1rem;
-                width: 100%;
-            }
-
-            .sidebar {
-                position: fixed;
-                right: -320px;
-                top: 0;
-                bottom: 0;
-                width: 290px;
-                z-index: 999;
-                transition: right 0.3s ease;
-                overflow-y: auto;
-            }
-
-            .sidebar.open {
-                right: 0;
-            }
-
-            .menu-toggle {
-                display: block;
-            }
-
-            iframe {
-                width: 100%;
-                min-height: 100vh;
-            }
-
-            .container {
-                flex-direction: column;
-            }
+            min-height: 80vh;
         }
     </style>
 </head>
 <body>
-    <!-- زر الهامبرغر للجوال -->
-    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-
     <div class="container">
-        <nav class="sidebar" id="sidebar">
+        <nav class="sidebar">
             <div class="sidebar-header">
                 <h2>🏛️ إدارة المسجد</h2>
                 <p>نظام متابعة الحلقات</p>
@@ -116,6 +27,7 @@
             </div>
             <div class="section-title">━━━ الرئيسية ━━━</div>
             <ul>
+                
                 <li id="nav-students" onclick="navigate('students')">👥 إضافة طالب جديد</li>
                 <li id="nav-halaqat" onclick="navigate('halaqat')">📖 رصد التسميع</li>
                 <li id="nav-events" onclick="navigate('events')">📅 الفعاليات القادمة</li>
@@ -133,8 +45,8 @@
             </ul>
             <div class="logout-btn" onclick="logout()">🚪 تسجيل الخروج</div>
         </nav>
-
         <main class="content">
+            <!-- سيتم تعيين src بواسطة JavaScript بعد التحقق من الصلاحيات -->
             <iframe id="contentFrame" src="about:blank"></iframe>
         </main>
     </div>
@@ -145,149 +57,17 @@
 
         const teacherAllowedSections = ['nav-students', 'nav-halaqat'];
         const iframe = document.getElementById('contentFrame');
-        const sidebar = document.getElementById('sidebar');
-
-        // دالة فتح/إغلاق القائمة
-        window.toggleSidebar = () => {
-            sidebar.classList.toggle('open');
-        };
-
-        // إغلاق القائمة عند اختيار قسم (في الجوال)
-        window.navigate = (sectionId) => {
-            iframe.src = `sections/${sectionId}/${sectionId}.html`;
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('open');
-            }
-        };
 
         function applyRoleRestrictions(email) {
-            let defaultSection = 'students';
+            let defaultSection = 'students'; // افتراضي للمدير
 
             if (email !== 'hammed@gmail.com') {
+                // إخفاء أقسام المدير
                 const allSectionIds = [
                     'nav-prayers', 'nav-students', 'nav-halaqat', 'nav-events',
                     'nav-khutba', 'nav-add-halaqa', 'nav-lectures',
-                    'nav-manage-students', 'nav-manage-halaqat', 'nav-manage-records',
+                    'nav-manage-students',nav-students, 'nav-manage-halaqat', 'nav-manage-records',
                     'nav-manage-lectures'
-                ];
-                allSectionIds.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.style.display = teacherAllowedSections.includes(id) ? '' : 'none';
-                    }
-                });
-                defaultSection = 'students';
-            }
-
-            navigate(defaultSection);
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('currentUserEmail').innerText = user.email;
-                applyRoleRestrictions(user.email);
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-
-        window.logout = async () => {
-            await signOut(auth);
-            window.location.href = 'login.html';
-        };
-    </script>
-</body>
-</html>
-            color: white;
-            border: none;
-            font-size: 1.8rem;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .hamburger:active {
-            transform: scale(0.9);
-        }
-    </style>
-</head>
-<body>
-    <!-- زر الهامبرغر يظهر فقط على الجوال -->
-    <button class="hamburger" id="hamburgerBtn" aria-label="القائمة">☰</button>
-
-    <!-- طبقة تعتيم تخفي القائمة عند النقر خارجها -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <div class="container">
-        <nav class="sidebar" id="sidebar">
-            <!-- نفس محتوى الشريط الجانبي بدون تغيير -->
-            <div class="sidebar-header">
-                <h2>🏛️ إدارة المسجد</h2>
-                <p>نظام متابعة الحلقات</p>
-            </div>
-            <div class="user-info" id="userInfo">
-                📧 <span id="currentUserEmail">جاري التحميل...</span>
-            </div>
-            <div class="section-title">━━━ الرئيسية ━━━</div>
-            <ul>
-                <li id="nav-students" onclick="navigate('students')">👥 إضافة طالب جديد</li>
-                <li id="nav-halaqat" onclick="navigate('halaqat')">📖 رصد التسميع</li>
-                <li id="nav-events" onclick="navigate('events')">📅 الفعاليات القادمة</li>
-                <li id="nav-khutba" onclick="navigate('khutba')">🕌 خطبة الجمعة</li>
-                <li id="nav-add-halaqa" onclick="navigate('add-halaqa')">🏫 إضافة حلقة جديدة</li>
-                <li id="nav-manage-donations" onclick="navigate('manage-donations')">💳 إدارة التبرعات</li>
-                <li id="nav-lectures" onclick="navigate('lectures')">🎤 المحاضرات</li>
-            </ul>
-            <div class="section-title">━━━ الإدارة ━━━</div>
-            <ul>
-                <li id="nav-manage-students" onclick="navigate('manage-students')">📋 إدارة الطلاب</li>
-                <li id="nav-manage-halaqat" onclick="navigate('manage-halaqat')">📋 إدارة الحلقات</li>
-                <li id="nav-manage-records" onclick="navigate('manage-records')">📋 إدارة سجلات التسميع</li>
-                <li id="nav-manage-lectures" onclick="navigate('manage-lectures')">📋 إدارة المحاضرات</li>
-            </ul>
-            <div class="logout-btn" onclick="logout()">🚪 تسجيل الخروج</div>
-        </nav>
-        <main class="content">
-            <iframe id="contentFrame" src="about:blank"></iframe>
-        </main>
-    </div>
-
-    <script type="module">
-        import { auth } from './firebase.js';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        const teacherAllowedSections = ['nav-students', 'nav-halaqat'];
-        const iframe = document.getElementById('contentFrame');
-        const sidebar = document.getElementById('sidebar');
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        // ----- منطق القائمة الجانبية للجوال -----
-        function openSidebar() {
-            sidebar.classList.add('open');
-            overlay.classList.add('active');
-        }
-        function closeSidebar() {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        }
-        hamburgerBtn.addEventListener('click', openSidebar);
-        overlay.addEventListener('click', closeSidebar);
-        // إغلاق القائمة عند اختيار أي قسم
-        document.querySelectorAll('.sidebar li').forEach(li => {
-            li.addEventListener('click', closeSidebar);
-        });
-
-        function applyRoleRestrictions(email) {
-            let defaultSection = 'students';
-            if (email !== 'hammed@gmail.com') {
-                const allSectionIds = [
-                    'nav-prayers', 'nav-students', 'nav-halaqat', 'nav-events',
-                    'nav-khutba', 'nav-add-halaqa', 'nav-lectures',
-                    'nav-manage-students', 'nav-manage-halaqat', 'nav-manage-records',
-                    'nav-manage-lectures', 'nav-manage-donations'
                 ];
                 allSectionIds.forEach(id => {
                     const el = document.getElementById(id);
@@ -299,15 +79,19 @@
                         }
                     }
                 });
-                defaultSection = 'students';
+                defaultSection = 'students'; // المعلم يبدأ بقسم الطلاب
             }
+
+            // تعيين القسم الافتراضي
             navigate(defaultSection);
         }
 
+        // التنقل وتحميل صفحة القسم المطلوب
         window.navigate = function(sectionId) {
             iframe.src = `sections/${sectionId}/${sectionId}.html`;
         }
 
+        // مراقبة المستخدم
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('currentUserEmail').innerText = user.email;
